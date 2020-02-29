@@ -1,0 +1,4 @@
+"0","ggplot(heart,aes(x=heart$age,fill=factor(cholesterol)))+geom_density(alpha=0.5)+scale_fill_manual(values=c(""yellow"", ""green""))+"
+"0"," xlab(label = ""Age"")+"
+"0"," ggtitle(""High Cholosterol"")+"
+"0"," theme_minimal()"

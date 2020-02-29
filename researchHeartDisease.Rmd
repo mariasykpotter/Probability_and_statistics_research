@@ -1,0 +1,194 @@
+---
+title: "Mini-research Heart Disease"
+output: html_notebook
+---
+Anna Pynda, Marianna Petrivska, Khrystyna Kubatska.
+
+Here we represent our project called 'Heart diseases' in which we analyse the dependence between different factors which cause heart deseases and age.
+```{r}
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(caret)
+library(ggpubr)
+install.packages("nortest")
+library(nortest)
+library(fitdistrplus)
+library(uniftest)
+
+
+```
+
+At first we read a csv file which contains the data. Research is based on the data set https://www.kaggle.com/ronitf/heart-disease-uci.
+
+```{r}
+
+heart <- read.csv("./heart.csv",header = TRUE)
+head(heart)
+
+
+```
+
+Here the number of patients of certain age is defined.
+
+```{r}
+table(heart$age)
+```
+
+Distribution of age visualized on a bar chart.
+
+```{r}
+hist(heart$age, col="deepskyblue4",border="white", main="Distribution of age")
+box(bty="l")
+
+```
+
+
+Then, create a new column in which there are patients with redundant level of sugar. In given data, sugar is presented as 1 when the fasting blood sugar > 120 mg/dl and else as 0. So it is clearly observed that for 243 this condition is incorrect and for 60 is correct.
+```{r}
+heart$sugar <- heart$fbs > 0
+summary(heart)
+
+```
+
+
+```{r}
+ggplot(heart,aes(x=heart$age,fill=factor(sugar)))+geom_density(alpha=0.5)+scale_fill_manual(values=c("yellow", "green"))+
+ xlab(label = "Age")+
+ ggtitle("High sugar level")+
+ theme_minimal()
+```
+
+The normal level of serum cholesterol is 240 that is why it is splitted into 2 subsets. It is noticeable that the cardinality of the both of them is approximately the same.
+```{r}
+heart$cholesterol <- heart$chol > 240 
+summary(heart)
+
+```
+```{r}
+ggplot(heart,aes(x=heart$age,fill=factor(cholesterol)))+geom_density(alpha=0.5)+scale_fill_manual(values=c("yellow", "green"))+
+ xlab(label = "Age")+
+ ggtitle("High Cholosterol")+
+ theme_minimal()
+```
+The patients are divided into 2 subsets depending on whether the blood pressure is normal or too high.
+```{r}
+heart$bloodphigh <- heart$trestbps > 140
+summary(heart)
+
+```
+
+```{r}
+ggplot(heart,aes(x=heart$age,fill=factor(bloodphigh)))+geom_density(alpha=0.5)+scale_fill_manual(values=c("yellow", "green"))+ xlab(label = "Age")+
+ ggtitle("High blood pressure")+
+ theme_minimal()
+```
+The classes of patients with abnormally low and normal blood pressure are extracted. 
+Similarly for high and low blood pressure, the correlation between patients with normal blood pressure and the deviated from the normal is 80% and 20% respectively. 
+
+```{r}
+heart$bloodplow <- heart$trestbps < 120
+summary(heart)
+
+```
+
+
+```{r}
+ggplot(heart,aes(x=heart$age,fill=factor(bloodplow)))+geom_density(alpha=0.5)+scale_fill_manual(values=c("yellow", "green"))+
+ xlab(label = "Age")+
+ ggtitle("Low blood pressure")+
+ theme_minimal()
+```
+
+Thalach is the maximum heart rate achieved in the observed population. The two subsets are a result of divison dependent on whether the thalach is smaller than mean value or greater.The cardinality of patients with normal heart rate is 132 and abnormal - 171.
+
+```{r}
+m = mean(heart$thalach)
+heart$heartrate <- heart$thalach < m
+summary(heart)
+
+```
+```{r}
+ggplot(heart,aes(x=heart$age,fill=factor(heartrate)))+geom_density(alpha=0.5)+scale_fill_manual(values=c("yellow", "green"))+
+ xlab(label = "Age")+
+ ggtitle("High heart rate")+
+ theme_minimal()
+```
+Thal is a factor that characterizes the thalassemia  which is an inherited blood disorder that causes the body to have less hemoglobin than normal. When thal = 3 - it is considered as normal; 6 - as fixed defect and 7 - as the reversable defect.
+```{r}
+heart$thal <- heart$thal > 3
+summary(heart)
+```
+
+```{r}
+ggplot(heart,aes(x=heart$age,fill=factor(thal)))+geom_density(alpha=0.5)+scale_fill_manual(values=c("yellow", "green"))+
+ xlab(label = "Age")+
+ ggtitle("Stress")+
+ theme_minimal()
+```
+
+
+The illness is charactized by target 1. So 165 patients have heart diseases while 138 are healthy.
+```{r}
+heart$ill <- heart$target > 0
+summary(heart)
+
+```
+
+```{r}
+ggplot(heart,aes(x=heart$age,fill=factor(ill)))+geom_density(alpha=0.5)+scale_fill_manual(values=c("yellow", "green"))+
+ xlab(label = "Age")+
+ ggtitle("Ill people")+
+ theme_minimal()
+```
+Build a linear regeression of heart rate dependent on age. The determination coefficient is 0.1588 which means that the linear regeression is good enough to make the conclusion about the dependence between age and heart rate. As p-value = 5.628e-13 <0.05 which is quite small, it means that the hypothesis H0 that the coefficient is equal to zero is rejected.
+```{r}
+relation <- lm(heart$age~heart$thalach)
+print(relation)
+print(summary(relation))
+```
+
+```{r}
+x = heart$age
+y = heart$thalach
+plot(y,x,col = "blue",main = "",
+abline(lm(x~y)),cex = 1.3,pch = 16,ylab = "Age",xlab = "Heart Rate")
+```
+Build a linear regeression of cholesterol dependent on age. The determination coefficient is 0.04566 which means that the linear regeression is good enough to make the conclusion about the dependence between age and cholesterol. As p-value = 0.0001786 <0.05 which is quite small, it means that the hypothesis H0 that the coefficient is equal to zero is rejected.
+```{r}
+relation <- lm(heart$age~heart$chol)
+print(relation)
+print(summary(relation))
+```
+```{r}
+x = heart$age
+y = heart$chol
+plot(y,x,col = "blue",main = "",
+abline(lm(x~y)),cex = 1.3,pch = 16,ylab = "Cholesterol",xlab = "Age")
+
+```
+
+As the p-value of all the tests is relatively small then the hypothesis H0 that the distribution of age is normal distribution  should be rejected acoording to Kolmogorov-Smirnov test, Wilks test, Pearson on normality.
+```{r}
+shapiro.test(heart$age)
+ks.test(heart$age, "pnorm")
+pearson.test(heart$age)
+```
+On a given Cullen and Frey graph it is clearly observed that our data is close to uniform or normal distirbution.
+```{r}
+descdist(heart$age, discrete=FALSE, boot=500)
+```
+According to the fitting experiments below the distribution is not uniform.
+```{r}
+fit.unif = fitdist(heart$age, "unif")
+plot(fit.unif)
+print(fit.unif)
+```
+According to the fitting experiments below the distribution is close to uniform.
+```{r}
+fit.norm= fitdist(heart$age, "norm")
+plot(fit.norm)
+print(fit.norm)
+```
+Conclusion: In this research project we visualized the geometric distribution of different factors such as blood pressure, sugar, heart rate and thal on age. From there, it is seen that the only factor of low blood pressure is more likely represented in patients of young age, all other factors become worse as the person gets older. There are also 2 linear regressions which characterize dependence of heart rate and cholesterol on age. Then 3 different tests where used for hypothesis testing of whether the distribution of age is normal. From the Cullen and Frey graph it is obvious that distribution is close to uniform and normal. So once again the fitting experiments are conducted. From them, it is seen that the distribution of age is close to normal.
+
